@@ -253,6 +253,9 @@ def run(rank, size):
             raise Exception(
                 "resnet, densenet and resnext, vgg, mobilenet, effecientnet, googlenet, shufflenet, regnet, dpn")
     model = model.to(DEVICE)
+    for name, param in model.named_parameters():
+        dist.all_reduce(param.data, op=dist.ReduceOp.SUM)
+        param.data /= float(size)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0)
     partition_size = np.array([1.0 / size for _ in range(size)])    # Equally split the dataset to workers
 
